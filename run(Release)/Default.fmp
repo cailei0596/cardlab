@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="gb2312" ?>
+<Workspace cardpro="0">
+    <ScriptRoot id="" name="" alias="" />
+    <ComponentRoot>
+        <Component name="FM_CRA_FM8301" type="2" path="FM_CPT_READER_FM8301.dll" param="" loadnow="0" existlib="1">
+            <Description>Component Description</Description>
+            <instance name="DefaultReader" param="D" enable="1">
+                <Description>...</Description>
+            </instance>
+            <instance name="Reader8301" param="" enable="1" />
+            <instance name="1112" param="ReaderFeature=COM1;BaudRate=115200;" enable="1" />
+            <instance name="reader1" param="ReaderFeature=53000048;AutoGetResponse=1;AutoResendCommand=1;" enable="1" />
+        </Component>
+        <Component name="FM_CRA_PCSC" type="2" path="FM_CPT_READER_PCSC.dll" param="aaa" loadnow="0" existlib="1">
+            <instance name="FMTOKEN" param="ReaderFeature=FMSH Algtoken 0;AutoGetResponse=1;" enable="1" />
+            <instance name="ReaderPcsc" param="" enable="1" />
+            <instance name="DefaultPCSC" param="" enable="1" />
+        </Component>
+        <Component name="FM_GEN_SMCAL" type="8" path="FM_CPT_SMCAL.dll" param="aaa" loadnow="0" existlib="1">
+            <instance name="DefaultSM" param="" enable="1">
+                <bind alias="pcsc" component="FM_CRA_PCSC" instance="DefaultPCSC" />
+            </instance>
+        </Component>
+        <Component name="FM_COM_HID" type="6" path="FM_CPT_COMMUNICATION_HID.dll" param="" loadnow="0" existlib="1">
+            <instance name="instance_hid" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_COM_TCP" type="6" path="FM_CPT_COMMUNICATION_TCP.dll" param="" loadnow="0" existlib="1">
+            <instance name="comtcp" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_COM_UART" type="6" path="FM_CPT_COMMUNICATION_UART.dll" param="" loadnow="0" existlib="1">
+            <instance name="a1" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_GEN_SCM" type="8" path="FM_CPT_GEN_SCM.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_ZIP" type="8" path="FM_CPT_GEN_ZIP.dll" param="" loadnow="0" existlib="1">
+            <instance name="zip" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_CRA_FM8201" type="2" path="FM_CPT_READER_FM8201.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_COM_TRANSPORT" type="6" path="FM_CPT_TRANSPORT.dll" param="" loadnow="0" existlib="1">
+            <instance name="Com" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_ISP_309" type="4" path="FM_CPT_FM1280ISP.dll" param="" loadnow="0" existlib="1">
+            <instance name="isp309" param="" enable="1">
+                <Description>...</Description>
+                <bind alias="FM_ActiveReader" component="FM_CRA_FM8301" instance="DefaultReader" />
+            </instance>
+        </Component>
+        <Component name="FM_GEN_FILE" type="8" path="FM_CPT_GEN_FILE.dll" param="" loadnow="0" existlib="1">
+            <instance name="file" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+            <instance name="infile" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+            <instance name="outfile" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_ISP_336" type="4" path="FM_CPT_FM336ISP.dll" param="" loadnow="0" existlib="1">
+            <instance name="isp336" param="" enable="1">
+                <Description>...</Description>
+                <bind alias="FM_ActiveReader" component="FM_CRA_FM8301" instance="DefaultReader" />
+            </instance>
+        </Component>
+        <Component name="FM_CRA_D8" type="2" path="FM_CPT_READER_D8.dll" param="" loadnow="0" existlib="1">
+            <instance name="d8" param="READERFEATURE=100;" enable="1" />
+        </Component>
+        <Component name="FM_DB_Mysql" type="5" path="FM_CPT_MYSQL.dll" param="" loadnow="0" existlib="1">
+            <instance name="dbTest" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_CPT_WINIO" type="8" path="FM_CPT_COMUNICATION_WINIO.dll" param="" loadnow="0" existlib="1">
+            <instance name="winio" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_CPT_GETRSA" type="8" path="FM_CPT_component_genrsa.dll" param="" loadnow="0" existlib="1">
+            <instance name="RsaGen" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_ISP_349BOOT" type="4" path="FM_CPT_FM349BOOTISP.dll" param="" loadnow="0" existlib="1">
+            <instance name="isp349boot" param="" enable="1">
+                <Description>...</Description>
+                <bind alias="FM_ActiveReader" component="FM_CRA_FM8301" instance="DefaultReader" />
+            </instance>
+        </Component>
+        <Component name="FM_CPT_HSM_SJL05" type="3" path="FM_CPT_HSM_SJL05.dll" param="" loadnow="0" existlib="1">
+            <instance name="hsm_SJL05" param="" enable="1" />
+        </Component>
+        <Component name="FM_DB_Mysql" type="9" path="FM_CPT_MYSQL.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_PUF" type="8" path="FM_CPT_GEN_PUF.dll" param="" loadnow="0" existlib="1">
+            <instance name="ins_puf" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_CRA_HNBOC" type="2" path="FM_CPT_READER_HNBOC.dll" param="" loadnow="0" existlib="1">
+            <instance name="hnboc" param="READERFEATURE=COM3" enable="1" />
+        </Component>
+        <Component name="FM_CRA_FM8303" type="2" path="FM_CPT_READER_FM8303.dll" param="" loadnow="0" existlib="1">
+            <instance name="8303" param="" enable="1" />
+        </Component>
+        <Component name="FM_ISP_347" type="4" path="FM_CPT_FM347ISP.dll" param="" loadnow="0" existlib="1">
+            <instance name="isp347" param="" enable="1">
+                <Description>...</Description>
+                <bind alias="FM_ActiveReader" component="FM_CRA_FM8301" instance="DefaultReader" />
+            </instance>
+        </Component>
+        <Component name="FM_CPT_HSM_SOFT" type="3" path="FM_CPT_HSM_SOFT.dll" param="" loadnow="0" existlib="1">
+            <instance name="hsm_soft" param="" enable="1" />
+        </Component>
+        <Component name="FM_ISP_347BOOT" type="4" path="FM_CPT_FM347BOOTISP.dll" param="" loadnow="0" existlib="1">
+            <instance name="isp347boot" param="" enable="1">
+                <Description>...</Description>
+                <bind alias="FM_ActiveReader" component="FM_CRA_FM8301" instance="DefaultReader" />
+            </instance>
+        </Component>
+        <Component name="FM_ISP_349" type="4" path="FM_CPT_FM349ISP.dll" param="" loadnow="0" existlib="1">
+            <instance name="isp349" param="" enable="1">
+                <Description>...</Description>
+                <bind alias="FM_ActiveReader" component="FM_CRA_FM8301" instance="DefaultReader" />
+            </instance>
+        </Component>
+        <Component name="FM_CRA_VCARD_READER" type="2" path="FM_CPT_READER_VIRTUAL.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_FM381FT" type="2" path="FM_CPT_READER_FM381FT.dll" param="" loadnow="0" existlib="1">
+            <instance name="FM381" param="READERFEATURE=COM3;AutoGetResponse=1;AutoResendCommand=1;" enable="1" />
+        </Component>
+        <Component name="FM_GEN_ASSIST" type="8" path="FM_CPT_gen_assist.dll" param="" loadnow="0" existlib="1">
+            <instance name="assist" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_CRA_JRCP" type="2" path="FM_CPT_READER_JRCP.dll" param="" loadnow="0" existlib="1">
+            <instance name="_jrcp" param="READERFEATURE=17.198.53.179-16014,16015" enable="1" />
+        </Component>
+        <Component name="FM_ISP_302" type="4" path="FM_CPT_FM1208ISP.dll" param="" loadnow="0" existlib="1">
+            <instance name="isp302" param="" enable="1">
+                <Description>...</Description>
+                <bind alias="FM_ActiveReader" component="FM_CRA_FM8301" instance="DefaultReader" />
+            </instance>
+        </Component>
+    </ComponentRoot>
+    <GlobalData>
+        <Variable name="@ErrorLog" type="I" value="1" />
+        <Variable name="@ChannelType" type="I" value="0" />
+        <Variable name="@ReaderType" type="I" value="3" />
+        <Variable name="@SwDirection" type="I" value="0" />
+        <Variable name="@SwLen" type="I" value="1" />
+        <Variable name="@FM_AlgorithmType" type="I" value="00" />
+        <Variable name="@CardType" type="I" value="1" />
+        <Variable name="@COS_CRC" type="H" value="21E3" />
+        <Variable name="@ChipType" type="I" value="1" />
+        <Variable name="@MFType" type="I" value="1" />
+        <Variable name="@ProjectEx" type="I" value="1" />
+        <Variable name="@RandType" type="I" value="1" />
+        <Variable name="@CryptStep" type="I" value="12" />
+        <Variable name="@cardUID" type="H" value="16F81B52" />
+        <Variable name="@COS_VER" type="H" value="01" />
+        <Variable name="@SMSChannel" type="I" value="1" />
+        <Variable name="@Operator" type="I" value="1" />
+        <Variable name="@BaudRate" type="I" value="1" />
+        <Variable name="@JAVA_CRC_OFFSET" type="H" value="00FF00000002FFC2" />
+        <Variable name="@COS_Platform" type="I" value="1" />
+        <Variable name="@IsRomify" type="I" value="0" />
+        <Variable name="@PBOC_Crypt_Type" type="I" value="1" />
+        <Variable name="@Trans_RecvTimeout" type="I" value="0" />
+        <Variable name="@Trans_Protocol" type="I" value="1001" />
+        <Variable name="@Trans_Interface" type="I" value="2" />
+        <Variable name="@Reader_CardTypeSN" type="I" value="1" />
+        <Variable name="@Reader_CardTypeOption" type="I" value="0" />
+        <Variable name="@Reader_M1Size" type="I" value="4" />
+        <Variable name="@Reader_SPTCC" type="I" value="1" />
+        <Variable name="@Reader_BootloadCRC" type="H" value="4160" />
+        <Variable name="@Reader_AppCosCRC" type="H" value="E034" />
+        <Variable name="@Reader_ChipVersion" type="H" value="04" />
+        <Variable name="@Reader_SoftwarePrimaryVersion" type="H" value="01" />
+        <Variable name="@Reader_SoftwareSecondaryVersion" type="H" value="0002" />
+        <Variable name="@Reader_AppCosCompileTime" type="H" value="20110916075530" />
+        <Variable name="@Reader_BootloadVersion" type="H" value="0003" />
+        <Variable name="@Reader_BootloadCompileTime" type="H" value="20110511105446" />
+        <Variable name="@Reader_ProductNum" type="H" value="0301" />
+        <Variable name="@Reader_ManufactureNum" type="H" value="0005" />
+        <Variable name="@Reader_InterfaceInfo" type="H" value="00" />
+        <Variable name="@Reader_267ProductNum" type="H" value="0301" />
+        <Variable name="@Reader_ConfigrationInfo" type="H" value="4800" />
+        <Variable name="@reader_ROMCompileTime" type="H" value="20090428164135" />
+        <Variable name="@Reader_DownLoadCompileTime" type="H" value="20090428164121" />
+        <Variable name="@Reader_CodeCRC" type="H" value="F4A3" />
+        <Variable name="@Reader_DataCRC" type="H" value="E98D" />
+        <Variable name="@Reader_ConfigMCUFreq" type="H" value="03" />
+        <Variable name="@Reader_ConfigM1WriteMAC" type="H" value="00" />
+        <Variable name="@Reader_ConfigFieldOnDelay" type="H" value="02" />
+        <Variable name="@Reader_ConfigM1S2KeyBLoad" type="H" value="00" />
+        <Variable name="@Reader_ATQA" type="H" value="0800" />
+        <Variable name="@Reader_SAK" type="H" value="20" />
+        <Variable name="@Reader_DeviceCRC" type="H" value="F70C" />
+        <Variable name="@Reader_DeviceType" type="H" value="8511" />
+        <Variable name="@Reader_DeviceVersion" type="H" value="010001" />
+        <Variable name="@Reader_DeviceDescription" type="H" value="464D383531315530312D3130302D3031" />
+    </GlobalData>
+    <WatchVariables>
+        <Variable name="hSW" />
+        <Variable name="sReaderName" />
+        <Variable name="hUID" />
+    </WatchVariables>
+    <BreakPoints />
+    <Batch />
+    <SwapVariables />
+    <APDUCmds />
+</Workspace>

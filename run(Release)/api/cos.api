@@ -1,0 +1,180 @@
+///////////////////////////////////////////
+// 一行为一个函数/关键字
+// 函数/关键字以字母为开始，非字母开始的一行认为无效行
+// 函数形参以“（”为开始，以“）”为结束
+
+//////////////////////////////////////////
+// 执行辅助函数
+ExeCommand(hexstr strCommand)
+// 获取组件的一个实例
+GetInstance(string instanceName, out instance outObj)
+// 释放由CreateInstance或GetInstance函数获取的实例
+ReleaseInstance(instance obj)
+LoadComponent(string name,string path, string param)
+UnloadComponent(string componentName)
+/////////////////////////////////////
+// FMCSE2.0版本新语法。在组件中创建一个实例
+// 1)	componentName：[in]组件名称
+// 2)	instanceName：[in]实例名称
+// 3)	obj：[out] 返回创建的实例
+// 4)	param：[in]创建实例时传入的参数,可选默认为””
+// 5)	paramEncodeType：[in]参数的编码类型,可选默认为”str”
+//		a)	“str” : 指明创建实例时传入的参数为字符串类型数据
+//		b)	“hex” : 指明创建实例时传入的参数为十六进制数据
+// 注：  组件容器加载了包含模块和实例创建信息的配置数据或者已经调用LoadComponent向组件容器传入模块创建信息
+CreateInstance(string componentName, string instanceName, out instance obj[, string param, string paramEncodeType])
+// instA：[in]实例对象,服务的使用方，比如: ISP实例
+// alias ：[in]instA的组件规约中规定的被绑定实例的别名。instA通过该别名明确被绑定实例的用途
+// instB：[in]实例对象， 服务的提供方，比如：读卡器实例
+BindInstance(instance instA, string alias, instance instB)
+UnbindInstance(instance instA, string alias)
+SetDefaultReader(instance pInstance)
+SetDefaultReaderName(string readerName)
+
+// 十六进制串操作函数
+HexstrLen(hexstr hData, int nOutLen)
+SubHexstr(hexstr strIn, int nBeginByteIndex, int nByteNum, hexstr strOut)
+ConcatHexstr(hexstr hex1,hexstr hex2, ... , hexstr outHex)
+CompareHexstr(hexstr hex1,hexstr hex2, ... ,int outResult)
+HexstrReverse(hexstr dataIn, hexstr dataOut)
+HexstrNot(hexstr dataIn, hexstr dataOut)
+HexstrXor(hexstr hex1,[hexstr hex2, ... ,] hexstr outHex)
+HexstrOr(hexstr hex1,[hexstr hex2, ... ,] hexstr outHex)
+HexstrAnd(hexstr hex1,[hexstr hex2, ... ,] hexstr outHex)
+HexstrShift(hexstr hex1, int nShiftBitNum, hexstr outHex)
+HexstrResize(hexstr hData, int nNewLen[，int nResizeMode])
+HexstrPadLeft(hexstr hDstData, int nTotalLen[, hexstr hPadData])
+HexstrPadRight(hexstr hDstData, int nTotalLen[, hexstr hPadData])
+
+// 数据类型转换函数（等值转换）
+HexstrToInt(hexstr strIn, int nOut)
+IntToHexstr(int nInt, hexstr strOut [,int nOutByte])
+HexstrToString(hexstr srcData, string outString)
+StringToHexstr(string srcString, hexstr outData)
+
+// 数据编码转换函数（非等值转换）
+BcdToInt(hexstr strIn, int nOut)
+IntToBcd(int nInt, hexstr strOut [,int nOutByte])
+HexToAsc(hexstr hexData, hexstr ascData)
+AscToHex(hexstr ascData, hexstr hexData)
+
+// 字符串操作函数
+//////////////////////////////////////////////////////////////////////////
+// StringLen
+// srcData: [in]输入的字符串（例如：dataIn = “12345”）。（常量或者变量）
+//nOutLen: [out]计算输入串的字节长度输出结果（例如：上述的dataIn长度为5）。（变量）
+StringLen(string srcData, int nOutLen)
+//////////////////////////////////////////////////////////////////////////
+// StringFind
+// srcStr: [in]输入源字符串（例如：dataIn = “012345”）。（常量或者变量）
+// nStartPos: [in]输入字符串查找的起始位置，从0开始。（常量或者变量）
+// srcStr: [in]输入待查找字符串。（常量或者变量）
+// nPos：[out]输出在源字符串中起始位置后出现的第一个待查找字符串的位置，如未出现待查找字符串时，结果为-1（例如：待查找字符串为“34”时，结果为3；待查找字符串为“56”时，结果为-1）。（变量）
+StringFind(string srcStr, int nStartPos, string subStr, int nPos)
+//////////////////////////////////////////////////////////////////////////
+// StringReplace
+// srcDes: [out]被替换的字符串（例如：dataIn = “012345”，当替换字符串）。（变量）
+//	nOffset: [in]字符串被替换的起始位置，从0开始。（常量或者变量）
+//	srcStr: [in]用于替换的字符串。（常量或者变量）
+StringReplace(string srcDes, int nOffset, string srcStr)
+//////////////////////////////////////////////////////////////////////////
+// StringToInt
+// [in] strData: 输入的以ASCII编码的字符串（常量或者变量）
+// [out] nOut: 输出转换后的整型数值（变量）
+StringToInt(string strData, int nOut)
+//////////////////////////////////////////////////////////////////////////
+// IntToString
+// [in] nData: 输入的以整型数值（常量或者变量）
+// [out] nOut: 输出转换后的ASCII编码的字符串（变量）
+IntToString(int nData, string srcOut)
+
+// 常用算法函数
+DES(hexstr dataIn, hexstr keyIn, hexstr dataOut,[int nMode])
+MAC(hexstr initIn, hexstr dataIn, hexstr keyIn, hexstr dataOut[，int arithMode [,int lenFlag]])
+DivKey(hexstr masterKey, hexstr divFactor, hexstr outSubKey,[hexstr ArithMode])
+HASH(hexstr dataIn, hexstr dataOut,[int nArithMode], [int nPaddingMode])
+RSA_GenKey(int bits, int e, hexstr nModulus,hexstr dSecExp)
+RSA_Encrypt(hexstr dataIn, hexstr ePubExp, hexstr nModulus,hexstr dataOut)
+RSA_Decrypt(hexstr dataIn, hexstr dSecExp, hexstr nModulus, hexstr dataOut)
+RSA_Sign(hexstr dataIn, hexstr dSecExp, hexstr nModulus, hexstr dataSign)
+RSA_Verify(hexstr dataIn, hexstr ePubExp, hexstr nModulus, hexstr dataSign)
+CRC16 (hexstr dataIn, hexstr initIn, int arithMode, hexstr dataOut)
+
+// 国密算法函数
+SM1(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt,[int nMode])
+CBC_SM1(hexstr initdata ,hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt,[int nMode])
+SM4(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt[,int nMode])
+CBC_SM4(hexstr initdata, hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt[,int nMode])
+SM7(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt,[int nMode])
+CBC_SM7(hexstr initdata, hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt[,int nMode])
+SSF33(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt[,int nMode])
+CBC_SSF33(hexstr initdata, hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt[,int nMode])
+SM2_GenKey (hexstr hPrivateKey, hexstr hPublicKey)
+SM2_Sign(hexstr hPrivateKey, hexstr hPublicKey	, hexstr hDataIn,hexstr hDataOut,[int mode],[hexstr hID])
+SM2_Verify(hexstr hPublicKey, hexstr hDataIn,hexstr hSignedData,int res,[int mode],[hexstr hID])
+SM2_Encrypt(hexstr hPublicKey ,hexstr hDataIn,hexstr hDataOut)
+SM2_Decrypt(hexstr hPrivateKey, hexstr hDataIn, hexstr hDataOut)
+SM2_PointMulti (hexstr hK,out hexstr hPoint)
+SM2_GetZ(hexstr hID,out hexstr hZ)
+SM3(hexstr dataIn, hexstr dataOut)
+SM1_Encrypt(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt)
+SM1_Decrypt(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt)
+SM7_Encrypt(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt)
+SM7_Decrypt(hexstr hDataIn, hexstr hKeyIn, hexstr hDataOUt)
+
+// 文件操作函数
+SaveFile(string strData,hexstr hexData,int nData, int nType, string strFileName)
+LoadFile(string strFileName, int nType, hexstr outData [,hexstr hAddress [, int nLength]])
+
+// 调试相关函数
+Start_Log(int nLogFlag)
+End_Log
+Delay(int nMSecond)
+CheckValid(条件表达式)
+GetTime([int nTimeValue])
+GetCurrentTime(int nFmt, out string formattedTime)
+PrintInfo(hexstr hInfoValue)
+PrintInfo(int nInfoValue)
+PrintInfo(string strInfoValue)
+Start_Output
+End_Output
+GetAPDURespTime(int iRespTime)
+
+// 其它辅助函数
+MessageBox(string info[,hexstr hexInfo])
+Random(int startNum, int endNum, int outRandNum)
+Exit([int exitCode])
+ErrOff ()
+ErrOn ()
+GetLastStatus(int status)
+
+// 启动结束相关函数
+//// 非接相关函数
+Field_On(int nMode)
+PPS(hexstr pps0,hexstr pps1)
+RATS(hexstr hCID, int nFlag)
+Deselect()
+
+//// 接触相关函数
+Card_Select(int nSlotNo, int nFlag)
+Cold_Reset(int nFlag)
+PTS(hexstr baudFlag)
+
+// 设备相关函数
+//// 读卡机具设备操作相关
+Dev_SetCardType(int nType)
+Set_Timeout(int nCharInterval,int nTotalTimeout)
+Anti_Tearing(int nCloseTime)
+Dev_Send(hexstr sendData)
+Dev_Recv(hexstr recvData[，int expectLen [,int timeOut],[ int timeOutFlag]])
+Dev_SendRecv(hexstr sendData， hexstr recvData[，int expectLen [,int timeOut]])
+Dev_CloseRF()
+Dev_SetBaudRate(int nBaudRate ,int nSlot)
+
+// system subs
+Ex_Auth(hexstr hKeyData, hexstr hKeyIndex)
+MAC1(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyMac, int nArithMode = 0)
+MAC2(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyCip, int nArithMode = 0)
+MAC3(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyMac, hexstr hInitKeyCip,int nArithMode = 0)
+其他
+// 通过组件名称获取组件实例指针

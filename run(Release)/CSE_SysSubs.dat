@@ -1,0 +1,783 @@
+//****************************************************//
+//功能描述: 	SM4_MAC
+//参数: 	hexstr initIn  初始向量
+//				hexstr dataIn     输入数据 需要计算MAC的数据串,输入数据可以是任意长度，算法会自动强制右补1字节的0x80，如果不被16整除，则继续右补0x00直到被16整除为止。（常量或变量都可以）
+//				hexstr keyIn ，	   输入密钥
+//			(输出)	hexstr dataOut ,	   输出数据
+//				int lenFlag,  0:4（16字节的逐4字节异或） 1:取前8字节  其他:16字节
+
+//          1.作者: 蔡磊
+//          2.日期: 2015年6月23日
+//          3.内容: 创建函数
+
+//****************************************************// 
+sub SM4_MAC(hexstr initIn, hexstr dataIn, hexstr keyIn, out hexstr dataOut ,int lenFlag)
+{
+	int ndatalen
+	int nsection
+	hexstr hsection
+
+	int datLen
+	ConcatHexstr(dataIn,80,dataIn)
+	
+	for(start=1;end=1024;step=1)
+	{
+			HexstrLen(dataIn,datLen)
+			if(datLen%16 == 0)
+			{
+				break
+			}
+			ConcatHexstr(dataIn,00,dataIn)	
+	}
+	
+	HexstrLen(dataIn,ndatalen)
+	
+	nsection =ndatalen/16
+	
+	
+	hexstr htemp
+	hexstr hresult
+	int nTest = 0
+	
+	SubHexstr(dataIn,0,16,hsection)
+	HexstrXor(initIn,hsection,hsection)
+	for(start = 1;end = nsection;step=1)
+	{
+		SM4(hsection,keyIn,htemp)	
+		nTest = nTest+1	
+		
+		if(nTest != nsection)
+		{
+			int nBegin  = nTest*16
+			SubHexstr(dataIn,nBegin  ,16,hsection)
+			HexstrXor(htemp,hsection,hsection)
+		}	
+	}
+	if(lenFlag == 0)//4字节异或
+	{
+		hexstr htemp1
+		hexstr htemp2
+		hexstr htemp3
+		hexstr htemp4
+		SubHexstr(htemp,0  ,4,htemp1)
+		SubHexstr(htemp,4  ,4,htemp2)
+		SubHexstr(htemp,8  ,4,htemp3)
+		SubHexstr(htemp,12  ,4,htemp4)
+		HexstrXor(htemp1,htemp2,htemp3,htemp4,dataOut)
+	}
+	elseif(lenFlag == 1)//前8字节
+	{
+		SubHexstr(htemp,0 ,8,dataOut)
+	}
+	else//16字节原文
+	{
+		dataOut = htemp
+	}
+	
+}
+
+
+//****************************************************//
+//函数名称: 	Ex_Auth(hexstr hKeyData, hexstr hKeyIndex)
+//功能描述: 	外部认证函数
+//输入参数: 	hexstr hKeyData,	明文密钥值
+//		hexstr hKeyIndex, 	使用卡片中进行外部认证的密钥的密钥索引
+//输出参数: 	无
+//全局变量-输入：无
+//全局变量-影响: 无
+//其他备注:
+//修订记录:
+//          1.作者: 杨小林
+//          2.日期: 2011年10月18日
+//          3.内容: 创建函数
+//****************************************************// 
+sub Ex_Auth(hexstr hKeyData, hexstr hKeyIndex)
+{
+	hexstr hRandom
+	hexstr hCmd
+	hexstr hExAuthSW
+	hexstr hRetSW
+
+	0084000008 RetRESP:hRandom
+	DES(hRandom,hKeyData,hRandom)
+	ConcatHexstr(008200,hKeyIndex,08,hRandom,hCmd)
+	ExeCommand(hCmd) RetSW:hRetSW //可以忽略6A88	
+	if(hRetSW!=9000)
+	{
+		if(hRetSW!=6A88)
+		{
+			CheckValid(0)
+		}
+	}
+}
+//****************************************************//
+//函数名称: 	MAC1(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyMac, int nArithMode = 0)
+//功能描述: 	MAC1功能
+//输入参数: 	hexstr hCmdHead，  指令头
+//				hexstr hDataLen，  明文数据长度
+//				hexstr hData ，	   明文数据
+//				hexstr hLe ,	   LE
+//				hexstr hInitKeyMac ,	MAC用初始密钥
+//				int nArithMode ,	缺省或0为DES，3为SM1，4为鄂尔多斯SM1，05为社保(DES)
+//输出参数: 	无
+//全局变量-输入：无
+//全局变量-影响: 无
+//其他备注:
+//修订记录:
+//          1.作者: 张永兴
+//          2.日期: 2011年12月20日
+//          3.内容: 创建函数
+//
+//          1.作者：王欣一
+//          2.日期：2012年3月7日
+//          3.内容：增加支持鄂尔多斯SM1
+//
+//	 				1.作者：柏志斌
+//          2.日期：2012-7-16 13:24
+//          3.内容：增加社保des分支
+//
+//	 				1.作者：吕晨俊
+//          2.日期：2012-8-1 10:53:23
+//          3.内容：缺陷修订：FM通用MAC1计算（nArithMode=ARITHMODE_DES）时，根据需求将取8字节随机数修改为取4随机数
+//****************************************************// 
+sub MAC1(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyMac, int nArithMode = 0)
+{
+	int ARITHMODE_DES =0
+	int ARITHMODE_SM1 =3
+	int ARITHMODE_ERSM1 =4
+	int ARITHMODE_SSSE =5		
+	int ARITHMODE_SM4 = 6
+	int ARITHMODE_SM4_ESAM = 7
+	hexstr s_hexstr 	
+	hexstr s_plaintext
+	hexstr s_random
+	hexstr s_mac
+	hexstr s_char
+	int s_int
+	hexstr s_hProcessKey
+	
+	HexstrToInt(hDataLen,s_int)
+	s_int =s_int +4
+	IntToHexstr(s_int, s_char)	//plaintext + 4bytes mac	
+	ConcatHexstr(hCmdHead,s_char,hData,s_hexstr)
+	if(nArithMode ==ARITHMODE_DES) 
+	{
+		0084000004 RetRESP:s_random //取4字节随机数
+		ConcatHexstr(s_random,00000000,s_random) //补4字节00
+		MAC(s_random,s_hexstr,hInitKeyMac,s_mac,nArithMode)
+	}
+	elseif(nArithMode ==ARITHMODE_SM1)
+	{	
+		0084000008 RetRESP:s_random //取8字节随机数
+		ConcatHexstr(s_random,0000000000000000,s_random)  //8字节随机数补8字节0	
+		MAC(s_random,s_hexstr,hInitKeyMac,s_mac,nArithMode)
+	}
+	elseif(nArithMode == ARITHMODE_ERSM1)    //鄂尔多斯SM1算法
+	{
+		0084000008 RetRESP:s_random //取8字节随机数
+		ConcatHexstr(s_random,0000000000000000,s_random)  //8字节随机数补8字节0
+		SM1_Encrypt(s_random,hInitKeyMac,s_hProcessKey)	   //计算过程密钥
+		
+		MAC(00000000000000000000000000000000,s_hexstr,s_hProcessKey,s_mac,3,1)
+		SubHexstr(s_mac,0,4,s_mac)
+		//MAC函数最后一个参数的说明
+		//lenFlag		DES算法MAC长度		SM1算法MAC长度
+		//不填或者0		4（8字节的前4）		4（16字节的逐4字节异或）
+		//1				    8 				      	16
+	}
+	elseif(nArithMode ==ARITHMODE_SSSE) 
+	{
+		//生成过程密钥start
+		0084000008 RetRESP:s_random //取8字节随机数
+		DES(s_random,hInitKeyMac,s_hProcessKey)
+		//生成过程密钥end
+		MAC(0000000000000000,s_hexstr,s_hProcessKey,s_mac,0)
+	}
+	elseif(nArithMode ==ARITHMODE_SM4) 
+	{
+		0084000008 RetRESP:s_random //取8字节随机数
+		ConcatHexstr(s_random,0000000000000000,s_random)  //8字节随机数补8字节0	
+		SM4(s_random,hInitKeyMac,s_hProcessKey)
+		//生成过程密钥end
+		SM4_MAC(00000000000000000000000000000000,s_hexstr,s_hProcessKey,s_mac,0)
+	}
+	elseif(nArithMode ==ARITHMODE_SM4_ESAM) 
+	{
+		0084000008 RetRESP:s_random //取8字节随机数
+		ConcatHexstr(s_random,0000000000000000,s_random)  //8字节随机数补8字节0	
+		//SM4(s_random,hInitKeyMac,s_hProcessKey)
+		//生成过程密钥end
+		SM4_MAC(s_random,s_hexstr,hInitKeyMac,s_mac,0)
+	}
+	else
+	{
+		PrintInfo("nArithMode输入错误，目前只支持00；03；04;05")
+		CheckValid(0)
+	}	
+
+	ConcatHexstr(hCmdHead,s_char,hData,s_mac,	s_hexstr)
+	ExeCommand(s_hexstr) 
+}
+
+
+//****************************************************//
+//函数名称: 	MAC2(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyCip, int nArithMode = 0)
+//功能描述: 	MAC2功能
+//输入参数: 	hexstr hCmdHead，  指令头
+//				hexstr hDataLen，  明文数据长度
+//				hexstr hData ，	   明文数据
+//				hexstr hLe ,	   LE
+//				hexstr hInitKeyCip ,	加密用初始密钥
+//				int nArithMode ,	缺省或0为DES，3为SM1，4为鄂尔多斯SM1，05为社保(DES)
+//输出参数: 	无
+//全局变量-输入：无
+//全局变量-影响: 无
+//其他备注:
+//修订记录:
+//          1.作者: 庄敏慧
+//          2.日期: 2012年5月17日
+//          3.内容: 创建函数
+//
+//	 				1.作者：柏志斌
+//          2.日期：2012-7-16 13:24
+//          3.内容：增加社保des分支
+//****************************************************// 
+sub MAC2(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyCip, int nArithMode = 0)
+{
+	int ARITHMODE_DES =0
+	int ARITHMODE_SM1 =3		
+	int ARITHMODE_ERSM1 =4
+	int ARITHMODE_SSSE =5		
+	int ARITHMODE_SM4 = 6
+	int ARITHMODE_SM4_ESAM = 7
+	
+	hexstr s_hexstr 	
+	hexstr s_plaintext
+	hexstr s_ciphertext	
+	hexstr s_random
+	hexstr s_mac
+	hexstr s_char
+	hexstr s_hProcessKey
+	int s_int
+	
+	hexstr s_exp
+	hexstr s_sw
+
+	ConcatHexstr(hDataLen,hData,s_plaintext) //这里没做长度判断,给的长度真是毫无意义啊，专门用来测试长度错误的？那么我下面的MAC部分长度是填这里的还是数据的？
+
+	if(nArithMode ==ARITHMODE_DES) 
+	{
+		DES(s_plaintext,hInitKeyCip,s_ciphertext,0) //一般来说输入数据是8的倍数，如果不是8的倍数，此函数在计算时自动以[80 00 ..]的补位形式补位到8的倍数再进行计算，
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/8)+1)*8 //ciphertext
+		IntToHexstr(s_int,s_char)
+	}
+	elseif(nArithMode ==ARITHMODE_SM1)
+	{
+		SM1_Encrypt(s_plaintext,hInitKeyCip,s_ciphertext)//16字节或16倍数字节的输入数据。（常量或变量都可以）,若不为16的倍数，则系统会自动补8000….16字节的密钥,与dataIn等长的加密后的输出数据
+		//SM1_Encrypt注释理解
+		//1)	目前SK固定为: 191A4EF367ECE281C903C46C23333C2A
+		//2)	AK: 00000000000000000000000000000000
+		//3)	EK:输入的密钥
+		//4)	D_ROUND：轮数，目前默认使用的是8。可以为8或10或12或14
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16 //ciphertext 
+		IntToHexstr(s_int,s_char)
+	}
+	elseif(nArithMode == ARITHMODE_ERSM1)  // 鄂尔多斯SM1
+	{
+		0084000008 RetRESP:s_random
+		ConcatHexstr(s_random,0000000000000000,s_random)
+		SM1_Encrypt(s_random,hInitKeyCip,s_hProcessKey)    //计算过程密钥，用于对数据的加密
+		
+		SM1_Encrypt(s_plaintext,s_hProcessKey,s_ciphertext)//16字节或16倍数字节的输入数据。（常量或变量都可以）,若不为16的倍数，则系统会自动补8000….16字节的密钥,与dataIn等长的加密后的输出数据
+		//SM1_Encrypt注释理解
+		//		1)	目前SK固定为: 191A4EF367ECE281C903C46C23333C2A
+		//2)	AK: 00000000000000000000000000000000
+		//3)	EK:输入的密钥
+		//4)	D_ROUND：轮数，目前默认使用的是8。可以为8或10或12或14
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16 //ciphertext
+		IntToHexstr(s_int,s_char)
+	}
+	elseif(nArithMode ==ARITHMODE_SSSE) 
+	{
+		//生成过程密钥start
+		0084000008 RetRESP:s_random //取8字节随机数
+		DES(s_random,hInitKeyCip,s_hProcessKey)
+		//生成过程密钥end
+		
+		DES(s_plaintext,s_hProcessKey,s_ciphertext,0) //一般来说输入数据是8的倍数，如果不是8的倍数，此函数在计算时自动以[80 00 ..]的补位形式补位到8的倍数再进行计算，
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/8)+1)*8 //ciphertext
+		IntToHexstr(s_int,s_char)
+	}
+	elseif(nArithMode ==ARITHMODE_SM4) //教育卡SM4
+	{
+		//生成过程密钥start
+		0084000008 RetRESP:s_random //取8字节随机数
+		ConcatHexstr(s_random,0000000000000000,s_random)
+		SM4(s_random,hInitKeyCip,s_hProcessKey,0)
+		//生成过程密钥end
+		
+		SM4(s_plaintext,s_hProcessKey,s_ciphertext,0) //一般来说输入数据是16的倍数，如果不是16的倍数，此函数在计算时自动以[80 00 ..]的补位形式补位到16的倍数再进行计算，
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16 //ciphertext
+		IntToHexstr(s_int,s_char)
+	}
+	elseif(nArithMode ==ARITHMODE_SM4_ESAM) 
+	{
+		SM4(s_plaintext,hInitKeyCip,s_ciphertext,0)//16字节或16倍数字节的输入数据。（常量或变量都可以）,若不为16的倍数，则系统会自动补8000….16字节的密钥,与dataIn等长的加密后的输出数据
+		//SM1_Encrypt注释理解
+		//1)	目前SK固定为: 191A4EF367ECE281C903C46C23333C2A
+		//2)	AK: 00000000000000000000000000000000
+		//3)	EK:输入的密钥
+		//4)	D_ROUND：轮数，目前默认使用的是8。可以为8或10或12或14
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16 //ciphertext 
+		IntToHexstr(s_int,s_char)
+	}
+	else
+	{
+		PrintInfo("nArithMode输入错误，目前只支持00；03；04；05")
+		CheckValid(0)
+	}
+	//这里的密文长度是,与dataIn等长（注意：如果dataIn需要补位，则是补位后的长度）的加密后的输出数据
+
+	ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_hexstr)	
+	ExeCommand(s_hexstr) 
+}
+
+
+//****************************************************//
+//函数名称: 	MAC3(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyMac, hexstr hInitKeyCip, int nArithMode = 0)
+//功能描述: 	MAC3功能
+//输入参数: 	hexstr hCmdHead，  指令头
+//				hexstr hDataLen，  明文数据长度
+//				hexstr hData ，	   明文数据
+//				hexstr hLe ,	   LE
+//				hexstr hInitKeyMac ,	MAC用初始密钥
+//				hexstr hInitKeyCip ,	DES用初始密钥
+//				int nArithMode ,	缺省或0为DES，3为SM1，4为鄂尔多斯SM1，05为社保(DES)
+//输出参数: 	无
+//全局变量-输入：无
+//全局变量-影响: 无
+//其他备注:
+//修订记录:
+//          1.作者: 张永兴
+//          2.日期: 2011年12月20日
+//          3.内容: 创建函数
+//
+//          1.作者：王欣一
+//          2.日期：2012年3月7日
+//          3.内容：增加支持鄂尔多斯SM1
+//
+//	 				1.作者：柏志斌
+//          2.日期：2012-7-16 13:24
+//          3.内容：增加社保des分支
+//
+//	 				1.作者：吕晨俊
+//          2.日期：2012-8-1 10:53:23
+//          3.内容：缺陷修订：FM通用MAC3计算（nArithMode=ARITHMODE_DES）时，根据需求将取8字节随机数修改为取4随机数
+//****************************************************// 
+sub MAC3(hexstr hCmdHead, hexstr hDataLen, hexstr hData, hexstr hLe, hexstr hInitKeyMac, hexstr hInitKeyCip,int nArithMode = 0)
+{
+	int ARITHMODE_DES =0
+	int ARITHMODE_SM1 =3
+	int ARITHMODE_ERSM1 =4		
+	int ARITHMODE_SSSE =5
+	int ARITHMODE_SM4 = 6
+	int ARITHMODE_SM4_ESAM = 7
+
+	hexstr s_hexstr 	
+	hexstr s_plaintext
+	hexstr s_ciphertext	
+	hexstr s_random
+	hexstr s_mac
+	hexstr s_char
+	int s_int
+	hexstr s_hProcessKey
+
+	ConcatHexstr(hDataLen,hData,s_plaintext) //这里没做长度判断,给的长度真是毫无意义啊，专门用来测试长度错误的？那么我下面的MAC部分长度是填这里的还是数据的？
+	if(nArithMode ==ARITHMODE_DES) 
+	{
+		DES(s_plaintext,hInitKeyCip,s_ciphertext,0) //一般来说输入数据是8的倍数，如果不是8的倍数，此函数在计算时自动以[80 00 ..]的补位形式补位到8的倍数再进行计算，
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/8)+1)*8+4 //ciphertext + 4 bytes mac
+		IntToHexstr(s_int,s_char)
+		//取随机数
+		0084000004 RetRESP:s_random //取4字节随机数		
+		ConcatHexstr(s_random,00000000,s_random) //补4字节00
+		
+		ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_hexstr)	
+		MAC(s_random,s_hexstr,hInitKeyMac,s_mac,nArithMode,0)
+		//MAC函数最后一个参数的说明
+		//lenFlag		DES算法MAC长度		SM1算法MAC长度
+		//不填或者0		4（8字节的前4）		4（16字节的逐4字节异或）
+		//1				    8 				      	16	
+	}
+	elseif(nArithMode ==ARITHMODE_SM1)
+	{
+		SM1_Encrypt(s_plaintext,hInitKeyCip,s_ciphertext)//16字节或16倍数字节的输入数据。（常量或变量都可以）,若不为16的倍数，则系统会自动补8000….16字节的密钥,与dataIn等长的加密后的输出数据
+		//SM1_Encrypt注释理解
+		//		1)	目前SK固定为: 191A4EF367ECE281C903C46C23333C2A
+		//2)	AK: 00000000000000000000000000000000
+		//3)	EK:输入的密钥
+		//4)	D_ROUND：轮数，目前默认使用的是8。可以为8或10或12或14
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16+4 //ciphertext + 4 bytes mac
+		IntToHexstr(s_int,s_char)
+		//取随机数; COS支持取8字节随机数补8字节零，和取16字节随机数等多种方式，这里使用了前者(根据国密用户卡需要)
+		0084000008 RetRESP:s_random //取8字节随机数	
+		ConcatHexstr(s_random,0000000000000000,s_random)  //8字节随机数补8字节0
+		
+		ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_hexstr)	
+		MAC(s_random,s_hexstr,hInitKeyMac,s_mac,nArithMode,0)
+		//MAC函数最后一个参数的说明
+		//lenFlag		DES算法MAC长度		SM1算法MAC长度
+		//不填或者0		4（8字节的前4）		4（16字节的逐4字节异或）
+		//1				    8 				      	16
+	}
+	elseif(nArithMode == ARITHMODE_ERSM1)    //鄂尔多斯SM1算法
+	{
+		0084000008 RetRESP:s_random		SW:9000
+		ConcatHexstr(s_random,0000000000000000,s_random)
+		SM1_Encrypt(s_random,hInitKeyCip,s_hProcessKey)    //计算过程密钥，用于对数据的加密
+		
+		SM1_Encrypt(s_plaintext,s_hProcessKey,s_ciphertext)//16字节或16倍数字节的输入数据。（常量或变量都可以）,若不为16的倍数，则系统会自动补8000….16字节的密钥,与dataIn等长的加密后的输出数据
+		//SM1_Encrypt注释理解
+		//		1)	目前SK固定为: 191A4EF367ECE281C903C46C23333C2A
+		//2)	AK: 00000000000000000000000000000000
+		//3)	EK:输入的密钥
+		//4)	D_ROUND：轮数，目前默认使用的是8。可以为8或10或12或14
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16+4 //ciphertext + 4 bytes mac
+		IntToHexstr(s_int,s_char)
+		//取随机数; COS支持取8字节随机数补8字节零，和取16字节随机数等多种方式，这里使用了前者(根据国密用户卡需要)
+		//0084000008 RetRESP:s_random //取8字节随机数	
+		//ConcatHexstr(s_random,0000000000000000,s_random)  //8字节随机数补8字节0
+		
+		SM1_Encrypt(s_random,hInitKeyMac,s_hProcessKey)    //计算过程密钥，用于MAC计算	
+		ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_hexstr)	
+		MAC(00000000000000000000000000000000,s_hexstr,s_hProcessKey,s_mac,3,1)
+		//MAC函数最后一个参数的说明
+		//lenFlag		DES算法MAC长度		SM1算法MAC长度
+		//不填或者0		4（8字节的前4）		4（16字节的逐4字节异或）
+		//1				    8					         16
+		SubHexstr(s_mac,0,4,s_mac)
+	} 
+	elseif(nArithMode == ARITHMODE_SSSE)    //社保算法（des）
+	{
+		//生成过程密钥start
+		0084000008	RetRESP:s_random	SW:9000
+		DES(s_random,hInitKeyCip,s_hProcessKey)
+		//生成过程密钥end
+		
+		DES(s_plaintext,s_hProcessKey,s_ciphertext,0) //一般来说输入数据是8的倍数，如果不是8的倍数，此函数在计算时自动以[80 00 ..]的补位形式补位到8的倍数再进行计算，
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/8)+1)*8+4 //ciphertext + 4 bytes mac
+		IntToHexstr(s_int,s_char)
+		
+		ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_hexstr)	
+		MAC(0000000000000000,s_hexstr,s_hProcessKey,s_mac,0,0)
+		//MAC函数最后一个参数的说明
+		//lenFlag		DES算法MAC长度		SM1算法MAC长度
+		//不填或者0		4（8字节的前4）		4（16字节的逐4字节异或）
+		//1				    8 				      	16		
+	}	
+	elseif(nArithMode == ARITHMODE_SM4)    //教育卡算法（SM4）
+	{
+		//生成过程密钥start
+		0084000008	RetRESP:s_random	SW:9000
+		ConcatHexstr(s_random,0000000000000000,s_random)
+		SM4(s_random,hInitKeyCip,s_hProcessKey)
+		//生成过程密钥end
+		
+		SM4(s_plaintext,s_hProcessKey,s_ciphertext,0) //一般来说输入数据是8的倍数，如果不是8的倍数，此函数在计算时自动以[80 00 ..]的补位形式补位到8的倍数再进行计算，
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16+4 //ciphertext + 4 bytes mac
+		IntToHexstr(s_int,s_char)
+		
+		ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_hexstr)	
+		SM4_MAC(00000000000000000000000000000000,s_hexstr,s_hProcessKey,s_mac,0)
+		//MAC函数最后一个参数的说明
+		//lenFlag		DES算法MAC长度		SM1算法MAC长度
+		//不填或者0		4（8字节的前4）		4（16字节的逐4字节异或）
+		//1				    8 				      	16		
+	}	
+	elseif(nArithMode ==ARITHMODE_SM4_ESAM)
+	{
+		SM4(s_plaintext,hInitKeyCip,s_ciphertext,0)//16字节或16倍数字节的输入数据。（常量或变量都可以）,若不为16的倍数，则系统会自动补8000….16字节的密钥,与dataIn等长的加密后的输出数据
+		//SM1_Encrypt注释理解
+		//		1)	目前SK固定为: 191A4EF367ECE281C903C46C23333C2A
+		//2)	AK: 00000000000000000000000000000000
+		//3)	EK:输入的密钥
+		//4)	D_ROUND：轮数，目前默认使用的是8。可以为8或10或12或14
+		//算密文长度
+		HexstrToInt(hDataLen,s_int)
+		s_int =((s_int/16)+1)*16+4 //ciphertext + 4 bytes mac
+		IntToHexstr(s_int,s_char)
+		//取随机数; COS支持取8字节随机数补8字节零，和取16字节随机数等多种方式，这里使用了前者(根据国密用户卡需要)
+		0084000008 RetRESP:s_random //取8字节随机数	
+		ConcatHexstr(s_random,0000000000000000,s_random)  //8字节随机数补8字节0
+		
+		ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_hexstr)	
+		SM4_MAC(s_random,s_hexstr,hInitKeyCip,s_mac,0)
+		//MAC函数最后一个参数的说明
+		//lenFlag		DES算法MAC长度		SM1算法MAC长度
+		//不填或者0		4（8字节的前4）		4（16字节的逐4字节异或）
+		//1				    8 				      	16
+	}
+	else
+	{
+		PrintInfo("nArithMode输入错误，目前只支持00；03；04；05")
+		CheckValid(0)
+	}
+	  //这里的密文长度是,与dataIn等长（注意：如果dataIn需要补位，则是补位后的长度）的加密后的输出数据
+
+	ConcatHexstr(hCmdHead,s_char,s_ciphertext,s_mac,	s_hexstr)
+	ExeCommand(s_hexstr)
+}
+
+
+
+
+hexstr KEY_NO				//密钥标示符
+hexstr TRADE_MONEY		//交易金额
+hexstr POS_NO		//终端机编号
+hexstr EP_MONEY			//电子存折余额
+hexstr EP_SNR_ONLINE		//电子存折联机交易序号
+hexstr KEY_NUMBER			//密钥版本号
+hexstr DLK					//算法标示
+hexstr FAK_NUMBER		//伪随机数
+
+hexstr TRADE_DATA		//主机交易日期
+hexstr TRADE_TIME		//主机交易时间
+
+hexstr OVERDRAFT_LIMIT	//透支金额
+hexstr TERMINAL_NUMBER	//终端交易序号
+hexstr EP_SNR_OFFLINE    //电子存折脱机交易序号
+hexstr AUTH_MESS			//建设部认证码
+
+hexstr SK_key          //过程密钥
+hexstr SKKey_len            //过程密钥长度
+
+int MK				//字密钥计算控制符
+hexstr SERIAL_NO		//应用序列号
+
+sub Init_Load (hexstr inData, hexstr inKey, hexstr inTradeStyle)
+{
+	int len
+	hexstr hlc
+	hexstr hbackData
+	hexstr hMac1Check
+	hexstr hMac1
+	hexstr hSourData_MAC1
+	hlc =  inData[4:1]
+	HexstrLen(hlc,len)
+	len = len+5
+	KEY_NO = inData[5:1]
+	TRADE_MONEY = inData[6:4]
+	POS_NO = inData[10:6]
+	ExeCommand(inData) SW:9000 RetRESP:hbackData
+	EP_MONEY = hbackData[0:4]
+	EP_SNR_ONLINE = hbackData[4:2]
+	KEY_NUMBER = hbackData[6:1]
+	DLK=hbackData[7:1]
+	FAK_NUMBER=hbackData[8:4]
+	hMac1=hbackData[12:4]
+	hexstr hKeyData
+	hKeyData = inKey
+	
+	if(0)
+	{
+		DivKey(hKeyData,SERIAL_NO,hKeyData)
+	}
+	SK_key = FAK_NUMBER[0:4] + EP_SNR_ONLINE[0:2] + 8000
+	DES(SK_key,hKeyData,SK_key)
+	hSourData_MAC1 = EP_MONEY[0:4] + TRADE_MONEY[0:4] + inTradeStyle[0:1] + POS_NO[0:6]
+	MAC(0000000000000000 ,hSourData_MAC1,SK_key,hMac1Check)
+	if(hMac1 != hMac1Check)
+	{
+		CheckValid(0)
+	}
+	
+}
+
+
+sub Load (hexstr inData, hexstr inTradeStyle, hexstr inDTK)
+{
+	hexstr hSourData
+	hexstr hMac2
+	hexstr hCmd
+	hexstr hTAC
+	hexstr hbackData
+	TRADE_DATA = inData[0:4]
+	TRADE_TIME = inData[4:3]
+	hSourData = TRADE_MONEY + inTradeStyle[0:1] + POS_NO+TRADE_DATA+TRADE_TIME
+	MAC(0000000000000000 ,hSourData,SK_key,hMac2)
+	hCmd = 805200000B+TRADE_DATA+TRADE_TIME+hMac2+04
+	ExeCommand(hCmd) SW:9000 RetRESP:hbackData
+	hTAC = hbackData[0:4]
+}
+
+sub Init_Purchase (hexstr inData)
+{
+	hexstr hbackData
+	ExeCommand(inData) SW:9000 RetRESP:hbackData
+	KEY_NO = inData[5:1]
+	TRADE_MONEY = inData[6:4]
+	POS_NO = inData[10:6]
+	EP_MONEY = hbackData[0:4]
+	EP_SNR_OFFLINE = hbackData[4:2]
+	OVERDRAFT_LIMIT = hbackData[6:3]
+	KEY_NUMBER = hbackData[9:1]
+	DLK = hbackData[10:1]
+	FAK_NUMBER = hbackData[11:4]
+}
+
+sub Purchase (hexstr inData, hexstr inKey, hexstr inTradeStyle, hexstr inDTK)
+{
+	hexstr hSourData
+	hexstr hMac2
+	hexstr hCmd
+	hexstr hTAC
+	hexstr hbackData
+	TERMINAL_NUMBER = inData[0:4]
+	TRADE_DATA = inData[4:4]
+	TRADE_TIME = inData[8:3]
+	
+	SK_key = FAK_NUMBER + EP_SNR_OFFLINE[0:2] + TERMINAL_NUMBER[2:2]
+	DES(SK_key,inKey,SK_key)
+	hSourData = TRADE_MONEY + inTradeStyle[0:1] + POS_NO+TRADE_DATA+TRADE_TIME
+	MAC(0000000000000000 ,hSourData,SK_key,hMac2)
+	hCmd = 805401000F+ inData[0:11]+hMac2+08
+	ExeCommand(hCmd) SW:9000 RetRESP:hbackData
+	hTAC = hbackData[0:4]
+	hMac2 = hbackData[4:4]
+}
+
+sub Init_Unload (hexstr inData, hexstr inKey, hexstr inTradeStyle)
+{
+	int len
+	hexstr hlc
+	hexstr hbackData
+	hexstr hMac1Check
+	hexstr hMac1
+	hexstr hSourData_MAC1
+	hlc =  inData[4:1]
+	HexstrLen(hlc,len)
+	len = len+5
+	KEY_NO = inData[5:1]
+	TRADE_MONEY = inData[6:4]
+	POS_NO = inData[10:6]
+	ExeCommand(inData) SW:9000 RetRESP:hbackData
+	EP_MONEY = hbackData[0:4]
+	EP_SNR_ONLINE = hbackData[4:2]
+	KEY_NUMBER = hbackData[6:1]
+	DLK=hbackData[7:1]
+	FAK_NUMBER=hbackData[8:4]
+	hMac1=hbackData[12:4]
+	hexstr hKeyData
+	hKeyData = inKey
+	
+	if(0)
+	{
+		DivKey(hKeyData,SERIAL_NO,hKeyData)
+	}
+	SK_key = FAK_NUMBER[0:4] + EP_SNR_ONLINE[0:2] + 8000
+	DES(SK_key,hKeyData,SK_key)
+	hSourData_MAC1 = EP_MONEY[0:4] + TRADE_MONEY[0:4] + inTradeStyle[0:1] + POS_NO[0:6]
+	MAC(0000000000000000 ,hSourData_MAC1,SK_key,hMac1Check)
+	if(hMac1 != hMac1Check)
+	{
+		CheckValid(0)
+	}
+}
+
+sub Unload (hexstr inData, hexstr inTradeStyle)
+{
+	hexstr hSourData
+	hexstr hMac2
+	hexstr hCmd
+	hexstr hTAC
+	hexstr hbackData
+	TRADE_DATA = inData[0:4]
+	TRADE_TIME = inData[4:3]
+	hSourData = TRADE_MONEY + inTradeStyle[0:1] + POS_NO+TRADE_DATA+TRADE_TIME
+	MAC(0000000000000000 ,hSourData,SK_key,hMac2)
+	hCmd = 805403000B+TRADE_DATA+TRADE_TIME+hMac2+04
+	ExeCommand(hCmd) SW:9000 RetRESP:hbackData
+	hTAC = hbackData[0:4]
+}
+
+sub Init_Limit (hexstr inData, hexstr inKey, hexstr inTradeStyle)
+{
+	int len
+	hexstr hlc
+	hexstr hbackData
+	hexstr hMac1Check
+	hexstr hMac1
+	hexstr hSourData_MAC1
+	hlc =  inData[4:1]
+	HexstrLen(hlc,len)
+	len = len+5
+	KEY_NO = inData[5:1]
+	TRADE_MONEY = inData[6:4]
+	POS_NO = inData[10:6]
+	ExeCommand(inData) SW:9000 RetRESP:hbackData
+	EP_MONEY = hbackData[0:4]
+	EP_SNR_ONLINE = hbackData[4:2]
+	OVERDRAFT_LIMIT =  hbackData[6:3]
+	KEY_NUMBER = hbackData[9:1]
+	DLK=hbackData[10:1]
+	FAK_NUMBER=hbackData[11:4]
+	hMac1=hbackData[15:4]
+	hexstr hKeyData
+	hKeyData = inKey
+	
+	if(0)
+	{
+		DivKey(hKeyData,SERIAL_NO,hKeyData)
+	}
+	SK_key = FAK_NUMBER[0:4] + EP_SNR_ONLINE[0:2] + 8000
+	DES(SK_key,hKeyData,SK_key)
+	hSourData_MAC1 = EP_MONEY[0:4] + TRADE_MONEY[0:4] + inTradeStyle[0:1] + POS_NO[0:6]
+	MAC(0000000000000000 ,hSourData_MAC1,SK_key,hMac1Check)
+	if(hMac1 != hMac1Check)
+	{
+		CheckValid(0)
+	}
+}
+
+sub Limit (hexstr inData, hexstr inTradeStyle, hexstr inDTK)
+{
+	hexstr hSourData
+	hexstr hMac2
+	hexstr hCmd
+	hexstr hTAC
+	hexstr hbackData
+	OVERDRAFT_LIMIT = inData[0:3]
+	
+	TRADE_DATA = inData[3:4]
+	TRADE_TIME = inData[7:3]
+	
+	
+	hSourData = OVERDRAFT_LIMIT + inTradeStyle[0:1] + POS_NO+TRADE_DATA+TRADE_TIME
+	MAC(0000000000000000 ,hSourData,SK_key,hMac2)
+	hCmd = 805800000E+ OVERDRAFT_LIMIT+TRADE_DATA+TRADE_TIME+hMac2+04
+	ExeCommand(hCmd) SW:9000 RetRESP:hbackData
+	hTAC = hbackData[0:4]
+	hMac2 = hbackData[4:4]
+}

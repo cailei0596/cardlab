@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="gb2312" ?>
+<Workspace cardpro="1">
+    <ScriptRoot id="{24A9828D-699D-4548-B8AE-A4CE1526C5F1} " name="22" alias="" />
+    <ComponentRoot>
+        <Component name="FM_CRA_FM8301" type="2" path="FM_CPT_READER_FM8301.dll" param="" loadnow="0" existlib="1">
+            <Description>Component Description</Description>
+            <instance name="DefaultReader" param="DesfireMode=1" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_CRA_PCSC" type="2" path="FM_CPT_READER_PCSC.dll" param="aaa" loadnow="0" existlib="1">
+            <instance name="DefaultPCSC" param="" enable="1" />
+        </Component>
+        <Component name="FM_GEN_SMCAL" type="8" path="FM_CPT_SMCAL.dll" param="aaa" loadnow="0" existlib="1">
+            <instance name="DefaultSM" param="" enable="0">
+                <bind alias="pcsc" component="FM_CRA_PCSC" instance="DefaultPCSC" />
+            </instance>
+        </Component>
+        <Component name="FM_COM_HID" type="6" path="FM_CPT_COMMUNICATION_HID.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_COM_TCP" type="6" path="FM_CPT_COMMUNICATION_TCP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_COM_UART" type="6" path="FM_CPT_COMMUNICATION_UART.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CPT_GETRSA" type="8" path="FM_CPT_component_genrsa.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CPT_WINIO" type="8" path="FM_CPT_COMUNICATION_WINIO.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_309" type="4" path="FM_CPT_FM1280ISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_336" type="4" path="FM_CPT_FM336ISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_FILE" type="8" path="FM_CPT_GEN_FILE.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_SCM" type="8" path="FM_CPT_GEN_SCM.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_ZIP" type="8" path="FM_CPT_GEN_ZIP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_DB_Mysql" type="9" path="FM_CPT_MYSQL.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_D8" type="2" path="FM_CPT_READER_D8.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_FM8201" type="2" path="FM_CPT_READER_FM8201.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_COM_TRANSPORT" type="6" path="FM_CPT_TRANSPORT.dll" param="" loadnow="0" existlib="1" />
+    </ComponentRoot>
+    <GlobalData>
+        <Variable name="@ErrorStop" type="I" value="1" />
+        <Variable name="@ErrorLog" type="I" value="1" />
+        <Variable name="@ChannelType" type="I" value="0" />
+        <Variable name="@AutoGetResponse" type="I" value="1" />
+        <Variable name="@AutoResendCommand" type="I" value="0" />
+        <Variable name="@AutoMoveINS" type="I" value="0" />
+        <Variable name="@ReaderType" type="I" value="3" />
+        <Variable name="@FM_AlgorithmType" type="I" value="05" />
+        <Variable name="@CardType" type="I" value="1005" />
+        <Variable name="@COS_CRC" type="H" value="21E3" />
+        <Variable name="@ChipType" type="I" value="4" />
+        <Variable name="@MFType" type="I" value="1" />
+        <Variable name="@RandType" type="I" value="1" />
+        <Variable name="@CryptStep" type="I" value="12" />
+        <Variable name="@SwDirection" type="I" value="1" />
+        <Variable name="@SwLen" type="I" value="2" />
+        <Variable name="@BaudRate" type="I" value="1" />
+        <Variable name="@COS_Platform" type="I" value="1" />
+        <Variable name="@GongJioaoAppletPara" type="I" value="0" />
+    </GlobalData>
+    <WatchVariables />
+    <BreakPoints />
+    <Batch />
+    <SwapVariables />
+    <APDUCmds />
+</Workspace>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="gb2312" ?>
+<Workspace cardpro="0">
+    <ScriptRoot id="{BEAE579B-1E90-41e2-A25B-11422F055BDA} " name="myProject" alias="">
+        <ScriptPath id="{325AC6FB-9987-41dd-99B4-162F57B6C3D0} " name="bin" alias="">
+            <ScriptNode id="{83222137-9B03-4f2a-98FA-155374622FE4} " name="test.rar" alias="" path="../../test.rar" />
+        </ScriptPath>
+        <ScriptNode id="{AD9B6776-7281-4f3a-BBF4-4F04140181F5} " name="FM343U01-004-149-01小号.cos" alias="" path="C:/Users/cailei/Desktop/FM343U01-004-149-01小号.cos" />
+    </ScriptRoot>
+    <ComponentRoot>
+        <Component name="FM_CRA_FM8301" type="2" path="FM_CPT_READER_FM8301.dll" param="" loadnow="0" existlib="1">
+            <Description>Component Description</Description>
+            <instance name="DefaultReader" param="" enable="1">
+                <Description>...</Description>
+            </instance>
+        </Component>
+        <Component name="FM_CRA_PCSC" type="2" path="FM_CPT_READER_PCSC.dll" param="aaa" loadnow="0" existlib="1">
+            <instance name="DefaultPCSC" param="" enable="1" />
+        </Component>
+        <Component name="FM_GEN_SMCAL" type="8" path="FM_CPT_SMCAL.dll" param="aaa" loadnow="0" existlib="1">
+            <instance name="DefaultSM" param="" enable="1">
+                <bind alias="pcsc" component="FM_CRA_PCSC" instance="DefaultPCSC" />
+            </instance>
+        </Component>
+        <Component name="FM_COM_HID" type="6" path="FM_CPT_COMMUNICATION_HID.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_COM_TCP" type="6" path="FM_CPT_COMMUNICATION_TCP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_COM_UART" type="6" path="FM_CPT_COMMUNICATION_UART.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CPT_GETRSA" type="8" path="FM_CPT_component_genrsa.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CPT_WINIO" type="8" path="FM_CPT_COMUNICATION_WINIO.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_302" type="4" path="FM_CPT_FM1208ISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_309" type="4" path="FM_CPT_FM1280ISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_336" type="4" path="FM_CPT_FM336ISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_347BOOT" type="4" path="FM_CPT_FM347BOOTISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_347" type="4" path="FM_CPT_FM347ISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_349BOOT" type="4" path="FM_CPT_FM349BOOTISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_ISP_349" type="4" path="FM_CPT_FM349ISP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_ASSIST" type="8" path="FM_CPT_gen_assist.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_FILE" type="8" path="FM_CPT_GEN_FILE.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_PUF" type="8" path="FM_CPT_GEN_PUF.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_SCM" type="8" path="FM_CPT_GEN_SCM.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_GEN_ZIP" type="8" path="FM_CPT_GEN_ZIP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CPT_HSM_SJL05" type="3" path="FM_CPT_HSM_SJL05.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CPT_HSM_SOFT" type="3" path="FM_CPT_HSM_SOFT.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_DB_Mysql" type="9" path="FM_CPT_MYSQL.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_D8" type="2" path="FM_CPT_READER_D8.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_FM381FT" type="2" path="FM_CPT_READER_FM381FT.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_FM8201" type="2" path="FM_CPT_READER_FM8201.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_FM8303" type="2" path="FM_CPT_READER_FM8303.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_HNBOC" type="2" path="FM_CPT_READER_HNBOC.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_JRCP" type="2" path="FM_CPT_READER_JRCP.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_CRA_VCARD_READER" type="2" path="FM_CPT_READER_VIRTUAL.dll" param="" loadnow="0" existlib="1" />
+        <Component name="FM_COM_TRANSPORT" type="6" path="FM_CPT_TRANSPORT.dll" param="" loadnow="0" existlib="1" />
+    </ComponentRoot>
+    <GlobalData />
+    <WatchVariables />
+    <BreakPoints />
+    <Batch />
+    <SwapVariables />
+    <APDUCmds />
+</Workspace>
